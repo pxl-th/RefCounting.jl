@@ -1,0 +1,4 @@
+name = "RefCounting"
+uuid = "ae9384ca-0caa-4f62-91bf-25c5d2096e14"
+authors = ["Anton Smirnov <tonysmn97@gmail.com>"]
+version = "0.1.0"
