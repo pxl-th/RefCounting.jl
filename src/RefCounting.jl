@@ -65,6 +65,7 @@ function run_passes_ipo_safe!(
     CC.@pass "slot2reg"  ir = CC.slot2reg(ir, ci, opt)
     CC.@pass "compact 1" ir = CC.compact!(ir)
     CC.@pass "refcount"  ir = refcount_pass!(ir)
+    # TODO rc deduplication
     CC.@pass "Inlining"  ir = CC.ssa_inlining_pass!(ir, opt.inlining, ci.propagate_inbounds)
     CC.@pass "compact 2" ir = CC.compact!(ir)
     CC.@pass "SROA"      ir = CC.sroa_pass!(ir, opt.inlining)
