@@ -53,6 +53,20 @@ function CC.optimize(
     return CC.finish(rci, opt, ir, caller)
 end
 
+# Do not mark the return value as unused, otherwise we lose tracking:
+# x = RefCounted(1) <- don't lose
+#     RefCounted(1) <- lose
+#
+# But it is still DCE eligible.
+function CC.abstract_call(
+    interp::RCInterpreter, arginfo::CC.ArgInfo, sv::CC.InferenceState,
+)
+    si = CC.StmtInfo(true)
+    (; rt, exct, effects, info) = CC.abstract_call(interp, arginfo, si, sv)
+    sv.stmt_info[sv.currpc] = info
+    return CC.RTEffects(rt, exct, effects)
+end
+
 function run_passes_ipo_safe!(
     ci::CC.CodeInfo, opt::CC.OptimizationState, caller::CC.InferenceResult,
     optimize_until::Union{Integer, AbstractString, Nothing} = nothing,
@@ -64,8 +78,10 @@ function run_passes_ipo_safe!(
     CC.@pass "convert"   ir = CC.convert_to_ircode(ci, opt)
     CC.@pass "slot2reg"  ir = CC.slot2reg(ir, ci, opt)
     CC.@pass "compact 1" ir = CC.compact!(ir)
+
     CC.@pass "refcount"  ir = refcount_pass!(ir)
-    # TODO rc deduplication
+    CC.@pass "rc dedup"  ir = deduplication_pass!(ir)
+
     CC.@pass "Inlining"  ir = CC.ssa_inlining_pass!(ir, opt.inlining, ci.propagate_inbounds)
     CC.@pass "compact 2" ir = CC.compact!(ir)
     CC.@pass "SROA"      ir = CC.sroa_pass!(ir, opt.inlining)
@@ -86,6 +102,7 @@ end
 include("rc.jl")
 include("defuse.jl")
 include("pass.jl")
+include("deduplication.jl")
 
 function __init__()
     COMPILER_WORLD[] = ccall(:jl_get_tls_world_age, UInt, ())

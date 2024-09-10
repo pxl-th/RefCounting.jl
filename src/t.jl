@@ -1,35 +1,41 @@
 using RefCounting
 using RefCounting: RefCounted
 
-# function f(x)
-#     y = RefCounted(:g)
-#     return x
-# end
+function f(x)
+    return x
+end
 
 @noinline function use(x)
     x.obj[] += 1
     return
 end
 
-function f()
+function f1()
     RefCounted(1, _ -> println("⋅ dtor ⋅"))
     return
 end
 
+function f2()
+    x = RefCounted(1, _ -> println("⋅ dtor ⋅"))
+    return
+end
+
 function loop()
-    for i in 1:10
+    for i in 1:2
         # This finalizes every iteration.
-        x = RefCounted(1, _ -> println("⋅ dtor ⋅"))
+        x = RefCounted(1, _ -> println("⋅ a dtor ⋅"))
 
         # This does not.
-        RefCounted(1, _ -> println("⋅ dtor ⋅"))
+        RefCounted(1, _ -> println("⋅ b dtor ⋅"))
     end
     return
 end
 
 function main()
     # RefCounting.execute(f, RefCounted(:x))
-    RefCounting.execute(f)
+    RefCounting.execute(f1)
+    RefCounting.execute(f2)
+    RefCounting.execute(loop)
     return
 end
 main()

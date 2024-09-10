@@ -11,7 +11,7 @@ mutable struct RefCounted{T}
         #     RefCounted(1) <- lose tracking
         # x = RefCounted(1) <- don't lose tracking
         return finalizer(rc) do rc
-            Core.println("RefCounted finalizer")
+            Core.println("rc finalizer")
             rc.counter != 0 && rc.dtor(rc.obj)
             return
         end
@@ -43,6 +43,24 @@ function increment!(rc::RefCounted)
     return
 end
 
+const SCANNED = Base.WeakKeyDict{Any, Bool}()
+
+function rc_scan!(@nospecialize(x))
+    Core.println("RC scanning $x $(typeof(x))")
+
+    @lock SCANNED begin
+        haskey(SCANNED, x) && return
+        SCANNED[x] = true
+    end
+
+    for f in 1:fieldcount(typeof(x))
+        v = Base.getfield(x, f)
+        if v isa RefCounted
+            decrement!(v)
+        end
+    end
+end
+
 function insert_decrement!(inserter, line, val)
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
@@ -55,6 +73,14 @@ function insert_increment!(inserter, line, val)
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
         GlobalRef(RefCounting, :increment!), val)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    inserter(new_inst)
+end
+
+function insert_rcscan!(inserter, line, val)
+    new_node = Expr(:call,
+        GlobalRef(Core, :finalizer),
+        GlobalRef(RefCounting, :rc_scan!), val)
     new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
     inserter(new_inst)
 end

@@ -7,20 +7,29 @@ Base.iterate(useref::CC.UseRefIterator, state...) = CC.iterate(useref, state...)
 Base.getindex(useref::CC.UseRef) = CC.getindex(useref)
 
 function refcount_pass!(ir::CC.IRCode)
+    Core.println("=== RC ===")
+
     # For an IRCode, find `RefCounted` statements and record their
     # definitions and uses in that IR.
     ir, defuses = find_rcs!(ir)
 
     if !isempty(defuses)
-        Core.println("Found following defuses:")
-        for (i, defuse) in enumerate(defuses)
-            Core.println(" - [$i] $defuse")
+        Core.println("Defuses:")
+        for defuse in defuses
+            Core.println(" - $defuse")
         end
     end
 
     # Given a CFG and defuses for it, determine exits, i.e.:
     # places, where `def` liveness ends or it escapes into another function.
     exits = determine_exits!(ir.cfg, defuses)
+
+    if !isempty(exits)
+        Core.println("Exits:")
+        for (d, e, ce) in exits
+            Core.println(" - $d: $e | $ce")
+        end
+    end
 
     ir = rc_insertion!(ir, defuses, exits)
     return ir
@@ -40,6 +49,9 @@ Returns:
 function stmt_kind(stmt, compact)
     is_incrementing = true
     is_new_ref = false
+    gc_preserve_begin = false
+    gc_preserve_end = false
+    attach_arcscan = false
 
     if stmt isa Expr
         if CC.is_known_call(stmt, Core.finalizer, compact)
@@ -48,36 +60,61 @@ function stmt_kind(stmt, compact)
             is_incrementing = false
             is_new_ref = true
         elseif CC.is_known_call(stmt, Core.setfield!, compact)
+            attach_arcscan = true
         elseif CC.is_known_call(stmt, Core.memoryrefget, compact)
             is_new_ref = true
+        elseif CC.isexpr(stmt, :gc_preserve_begin)
+            is_incrementing = false
+            gc_preserve_begin = true
+        elseif CC.isexpr(stmt, :gc_preserve_end)
+            is_incrementing = false
+            gc_preserve_end = true
         end
-        # TODO gc preserve begin/end
     elseif stmt isa GlobalRef
         is_new_ref = true
     elseif stmt isa CC.PhiCNode
         is_new_ref = true
     end
 
-    return (; is_incrementing, is_new_ref)
+    return (;
+        is_incrementing, is_new_ref,
+        gc_preserve_begin, gc_preserve_end, attach_arcscan)
 end
 
 function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
+    # TODO can `SSAValue` have multiple defuses, why vector?
+    preserves = Dict{CC.SSAValue, Vector{DefUse}}()
     defuses = Dict{Union{CC.SSAValue, CC.Argument}, DefUse}()
 
-    # Find `RefCounted` argtypes and mark them as `defs` for `defuses`.
+    # Find `RefCounted` argtypes and mark them as `defs`.
     for (i, T) in enumerate(ir.argtypes)
-        wT = CC.widenconst(T)
-        is_rctype(wT) || continue
-        Core.println("Argument $i: $T (widened $wT, is_rctype $(is_rctype(wT)))")
+        is_rctype(CC.widenconst(T)) || continue
+        defuses[CC.Argument(i)] = DefUse(CC.Argument(i), Int[], Int[])
 
-        defuses[CC.Argument(i)] = DefUse(CC.Argument(i), [1], Int[])
+        Core.println("Argument $i is `RefCounted` $(CC.widenconst(T))")
     end
 
     compact = CC.IncrementalCompact(ir)
     for ((old_idx, idx), stmt) in compact
+        Core.println("$old_idx, $idx, $stmt")
         inst::CC.Instruction = compact[CC.SSAValue(idx)]
 
-        (; is_incrementing, is_new_ref) = stmt_kind(stmt, compact)
+        (;
+            is_incrementing, is_new_ref,
+            gc_preserve_begin, gc_preserve_end, attach_arcscan,
+        ) = stmt_kind(stmt, compact)
+        Core.println("stmt kind: $is_incrementing, $is_new_ref, $gc_preserve_begin, $gc_preserve_end, $attach_arcscan")
+
+        # If `stmt` is a call to `gc_preserve_end`, then extend
+        # its arg lifetime up to this point (mark as a use).
+        if gc_preserve_end
+            val = only(stmt.args)
+            preserve = get(preserves, val, nothing)
+            if preserve ≢ nothing
+                map(defuse -> push!(defuse.uses, idx), preserve)
+            end
+            continue
+        end
 
         # Check if `inst` is a call to `RefCounted` ctor
         # or the return value of some function is `RefCounted`.
@@ -86,6 +123,9 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         #  - `y = some_func()::RefCounted`.
         is_rc = is_rctype(CC.widenconst(inst[:type]))
         is_ϕ = stmt isa CC.PhiNode
+        has_arcuse = false
+        # TODO if value is not used, we lose tracking...
+        Core.println("is rc: $is_rc, is_ϕ: $is_ϕ, $(CC.widenconst(inst[:type]))")
 
         # If ϕ stmt returns a `RefCounted` it also starts a new chain.
         # Process each of its edges.
@@ -100,28 +140,61 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 use = use_ref[]
                 (use isa CC.SSAValue) || (use isa CC.Argument) || continue
 
+                has_arcuse = true
+
                 # Get defuses for `use`.
                 # If it is `nothing`, then it is not a `RefCounted` obj
                 # and we don't need to handle it.
                 defuse = get(defuses, use, nothing)
                 defuse ≡ nothing && continue
+                @assert idx ∉ defuse.defs "$idx in defs: $(defuse.defs): $stmt, $use"
+                @assert idx ∉ defuse.uses "$idx in uses: $(defuse.uses): $stmt, $use"
                 push!(defuse.uses, idx)
 
-                # TODO `is_gc_preserve`
+                # If `stmt` is a `gc_preserve_begin` call, then add
+                # current `defuse` to `preserves` to be able to extend
+                # uses up until `gc_preserve_end` `stmt`.
+                # Example:
+                # gc_preserve_begin <- save `defuse` to `preserves`.
+                # ...
+                # gc_preserve_end   <- add `use` to `defuse` to extend lifetime.
+                if gc_preserve_begin
+                    preserve = get!(() -> DefUse[], preserves, CC.SSAValue(idx))
+                    push!(preserve, defuse)
+                end
+
                 # TODO `arcuse` & `attach_arcscan`
 
                 # Increment `RefCounted` counter on every use.
                 if is_incrementing
-                    Core.println("""Inserting increment:
-                        - stmt: $stmt
-                        - is_rc: $is_rc
-                        - use: $use ($(typeof(use)))
-                    """)
                     insert_increment!(
                         CC.InsertBefore(compact, CC.SSAValue(idx)),
                         inst[:line], use)
+
+                    Core.println("""Inserting increment:
+                        - stmt: $stmt
+                        - is_new_ref: $is_new_ref
+                        - is_rc: $is_rc
+                        - use: $use ($(typeof(use)))""")
                 end
             end
+        end
+
+        if has_arcuse & attach_arcscan
+            obj = stmt.args[2]
+            @assert obj ≢ nothing
+            insert_rcscan!(
+                CC.InsertBefore(compact, CC.SSAValue(idx)),
+                inst[:line], obj)
+
+            Core.println("Attaching rcscan $obj $(typeof(obj)): $stmt")
+        end
+
+        if stmt isa CC.UpsilonNode
+            # does not start a new value chain
+            # XXX
+            Core.println("[???] UpsilonNode")
+            continue
         end
 
         # If so, then it is considered as another `def`.
@@ -133,13 +206,22 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
 
             val = CC.SSAValue(idx)
             defuse = get!(() -> DefUse(val, Int[], Int[]), defuses, val)
+            # @assert idx ∉ defuse.defs "isrc $idx in defs: $(defuse.defs): $stmt, $val"
+            # @assert idx ∉ defuse.uses "isrc $idx in uses: $(defuse.uses): $stmt, $val"
             push!(defuse.defs, idx)
+            Core.println("New RC def: $idx")
 
             if is_new_ref
                 insert_increment!(
-                    CC.InsertHere(compact), inst[:line], CC.SSAValue(idx))
+                    CC.InsertHere(compact),
+                    inst[:line], CC.SSAValue(idx))
+
+                Core.println("""Inserting increment:
+                    - stmt: $stmt
+                    - is_new_ref: $is_new_ref
+                    - is_rc: $is_rc
+                    - val: $idx""")
             end
-            Core.println("returns `RefCounted`: stmt=$stmt, val=$val, is_new_ref=$is_new_ref")
         end
     end
 
@@ -191,7 +273,6 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
             end
         end
         push!(all_exits, (defuse.def, exits, conditional_exits))
-        Core.println("Exits for $(defuse.def): $exits")
     end
 
     return all_exits
@@ -212,17 +293,18 @@ function rc_insertion!(
         for bb in exits
             terminator = last(blocks[bb].stmts)
             inst = ir.stmts[terminator]
+            insert_decrement!(
+                CC.InsertBefore(ir, CC.SSAValue(terminator)),
+                inst[:line], def)
+
             Core.println("""Inserting decrement:
                 - stmt: $(inst[:stmt])
                 - line $(inst[:line])
                 - def: $def
-                - terminator: $terminator
-            """)
-            insert_decrement!(
-                CC.InsertBefore(ir, CC.SSAValue(terminator)),
-                inst[:line], def)
+                - terminator: $terminator""")
         end
 
+        @assert isempty(cond_exits)
         # TODO cond_exits
     end
     return CC.compact!(ir)
