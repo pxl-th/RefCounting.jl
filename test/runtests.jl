@@ -1,5 +1,6 @@
 using Test
 using RefCounting
+using RefCounting: RefCounted
 
 const CC = Core.Compiler
 
@@ -44,5 +45,49 @@ const CC = Core.Compiler
         @test exit[1] == CC.SSAValue(1)
         @test exit[2] == [1]
         @test isempty(exit[3])
+    end
+end
+
+const COUNTER::Ref{Int} = Ref{Int}(-1)
+
+function global_dtor(obj, counter)
+    COUNTER[] = counter
+    return
+end
+
+@testset "RefCounting" begin
+    @testset "No assignment, no use" begin
+        function f()
+            RefCounted(:x, global_dtor)
+            return
+        end
+
+        COUNTER[] = -1
+        RefCounting.execute(f)
+        @test COUNTER[] == 0
+    end
+
+    @testset "No use" begin
+        function f()
+            x = RefCounted(:x, global_dtor)
+            return
+        end
+
+        COUNTER[] = -1
+        RefCounting.execute(f)
+        @test COUNTER[] == 0
+    end
+
+    @testset "For loop, no use" begin
+        function f()
+            for _ in 1:2 # TODO `1:1` loop results in `Unreachable reached`.
+                x = RefCounted(:x, global_dtor)
+            end
+            return
+        end
+
+        COUNTER[] = -1
+        RefCounting.execute(f)
+        @test COUNTER[] == 0
     end
 end

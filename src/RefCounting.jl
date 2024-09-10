@@ -80,7 +80,7 @@ function run_passes_ipo_safe!(
     CC.@pass "compact 1" ir = CC.compact!(ir)
 
     CC.@pass "refcount"  ir = refcount_pass!(ir)
-    CC.@pass "rc dedup"  ir = deduplication_pass!(ir)
+    CC.@pass "rc ddp"    ir = deduplication_pass!(ir)
 
     CC.@pass "Inlining"  ir = CC.ssa_inlining_pass!(ir, opt.inlining, ci.propagate_inbounds)
     CC.@pass "compact 2" ir = CC.compact!(ir)

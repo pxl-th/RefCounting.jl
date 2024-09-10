@@ -12,14 +12,14 @@ mutable struct RefCounted{T}
         # x = RefCounted(1) <- don't lose tracking
         return finalizer(rc) do rc
             Core.println("rc finalizer")
-            rc.counter != 0 && rc.dtor(rc.obj)
+            rc.counter != 0 && rc.dtor(rc.obj, rc.counter)
             return
         end
     end
 end
 
 RefCounted(obj::T, dtor) where T = RefCounted{T}(obj, dtor)
-RefCounted(obj) = RefCounted(obj, (_) -> nothing)
+RefCounted(obj) = RefCounted(obj, (_, _) -> nothing)
 
 # `refcount` pass will use this to detect `RefCounted` objects.
 is_rctype(T::Type) = T !== Union{} && T <: RefCounted
@@ -29,7 +29,7 @@ function decrement!(rc::RefCounted)
     Core.println("[runtime] decrement!: $old -> $new")
 
     if new == 0
-        rc.dtor(rc.obj)
+        rc.dtor(rc.obj, rc.counter)
     elseif new == typemax(UInt)
         error("RefCounted counter got below `0`!")
     end

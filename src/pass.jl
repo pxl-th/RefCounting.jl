@@ -171,7 +171,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                         CC.InsertBefore(compact, CC.SSAValue(idx)),
                         inst[:line], use)
 
-                    Core.println("""Inserting increment:
+                    Core.println("""Inserting increment for userefs:
                         - stmt: $stmt
                         - is_new_ref: $is_new_ref
                         - is_rc: $is_rc
@@ -216,7 +216,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     CC.InsertHere(compact),
                     inst[:line], CC.SSAValue(idx))
 
-                Core.println("""Inserting increment:
+                Core.println("""Inserting increment for rc:
                     - stmt: $stmt
                     - is_new_ref: $is_new_ref
                     - is_rc: $is_rc

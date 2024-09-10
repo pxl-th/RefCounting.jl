@@ -10,32 +10,34 @@ end
     return
 end
 
+dtor(_, c) = Core.println("⋅ dtor: $c")
+
 function f1()
-    RefCounted(1, _ -> println("⋅ dtor ⋅"))
+    RefCounted(1, dtor)
     return
 end
 
 function f2()
-    x = RefCounted(1, _ -> println("⋅ dtor ⋅"))
+    x = RefCounted(1, dtor)
     return
 end
 
-function loop()
-    for i in 1:2
+function loop(n)
+    for i in 1:n
         # This finalizes every iteration.
-        x = RefCounted(1, _ -> println("⋅ a dtor ⋅"))
+        x = RefCounted(1, dtor)
 
-        # This does not.
-        RefCounted(1, _ -> println("⋅ b dtor ⋅"))
+        # # This does not.
+        # RefCounted(1, dtor)
     end
     return
 end
 
 function main()
-    # RefCounting.execute(f, RefCounted(:x))
-    RefCounting.execute(f1)
-    RefCounting.execute(f2)
-    RefCounting.execute(loop)
+    # RefCounting.execute(f, RefCounted(:x, dtor))
+    # RefCounting.execute(f1)
+    # RefCounting.execute(f2)
+    RefCounting.execute(loop, 1)
     return
 end
 main()
