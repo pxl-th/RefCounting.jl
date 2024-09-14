@@ -155,8 +155,6 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 use = use_ref[]
                 (use isa CC.SSAValue) || (use isa CC.Argument) || continue
 
-                has_arcuse = true
-
                 # Get defuses for `use`.
                 # If it is `nothing`, then it is not a `RefCounted` obj
                 # and we don't need to handle it.
@@ -166,6 +164,9 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 @assert idx ∉ defuse.uses "$idx in uses: $(defuse.uses): $stmt, $use"
                 Core.println("New RC use: $use -> $idx")
                 push!(defuse.uses, idx)
+
+                # TODO test
+                has_arcuse = true
 
                 # If `stmt` is a `gc_preserve_begin` call, then add
                 # current `defuse` to `preserves` to be able to extend
@@ -178,8 +179,6 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     preserve = get!(() -> DefUse[], preserves, CC.SSAValue(idx))
                     push!(preserve, defuse)
                 end
-
-                # TODO `arcuse` & `attach_arcscan`
 
                 # Increment `RefCounted` counter on every use.
                 if is_incrementing
@@ -255,14 +254,17 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
         Vector{Pair{Int, Int}}           # Conditional exits.
     }}()
 
+    Core.println("=== exits ===")
+
     for defuse in defuses
         @show defuse
         live_ins::CC.BlockLiveness = CC.compute_live_ins(
             cfg, sort(defuse.defs), defuse.uses)
 
-        @show live_ins
         bbs = copy(live_ins.def_bbs)
         isempty(live_ins.live_in_bbs) || append!(bbs, live_ins.live_in_bbs)
+        @show live_ins
+        @show bbs
 
         exits = Int[]
         conditional_exits = Pair{Int, Int}[]
@@ -287,7 +289,7 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
             # Otherwise, other successor blocks are not in `bbs`,
             # then this is a conditional exit.
             for other_bb in succs
-                other_bb ∈ bbs & continue
+                other_bb ∈ bbs && continue
                 push!(conditional_exits, bb => other_bb)
             end
         end
@@ -319,12 +321,34 @@ function rc_insertion!(
             terminator = last(block_stmts)
             inst = ir.stmts[terminator]
             stmt = inst[:stmt]
-            # TODO ensure there is a successor block?
-            if CC.is_known_call(stmt, RefCounted, ir)
-                # TODO check if BB contains only one stmt and it is RefCounted ctor:
-                # then either insert after this stmt or use immediate successor's first stmt
-                #
-                # either case is fine, since it is not a loop if it has only 1 stmt
+
+            is_return_stmt = stmt isa Core.ReturnNode
+
+            # If exit BB terminator stmt is a RefCounted ctor,
+            # insert decrement in the 1st stmt of the successor block.
+            #
+            # This may happen in a case where a loop is optimized away, e.g.:
+            # for i in 1:1
+            #     RefCounted(1, dtor)
+            # end
+            #
+            # In this case the for-loop BB will contain only 1 stmt which is
+            # a RefCounted ctor.
+            use_succ_block = (
+                CC.is_known_call(stmt, RefCounted, ir)
+                # || (
+                #     length(blocks[bb].stmts) == 1 &&
+                #     length(blocks) ≥ bb + 1 &&
+                #     !is_return_stmt
+                # )
+            )
+            if use_succ_block
+                Core.println("--- use_succ_block")
+                @assert length(blocks) ≥ bb + 1
+                for idx in blocks[bb + 1].stmts
+                    @show idx, ir.stmts[idx][:stmt]
+                end
+
                 terminator = first(blocks[bb + 1].stmts)
                 inst = ir.stmts[terminator]
                 stmt = inst[:stmt]
@@ -335,6 +359,8 @@ function rc_insertion!(
                 inst[:line], def)
 
             Core.println("""Inserting decrement:
+                - use_succ_block: $use_succ_block
+                - $(typeof(stmt))
                 - stmt: $stmt
                 - line $(inst[:line])
                 - def: $def
@@ -342,7 +368,7 @@ function rc_insertion!(
                 - terminator: $terminator""")
         end
 
-        @assert isempty(cond_exits)
+        # @assert isempty(cond_exits)
         # TODO cond_exits
     end
     return CC.compact!(ir)

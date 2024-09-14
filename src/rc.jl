@@ -26,7 +26,6 @@ is_rctype(T::Type) = T !== Union{} && T <: RefCounted
 
 function decrement!(rc::RefCounted)
     old, new = @atomic rc.counter - 1
-    Core.println("[runtime] decrement!: $old -> $new")
 
     if new == 0
         rc.dtor(rc.obj, rc.counter)
@@ -38,7 +37,6 @@ end
 
 function increment!(rc::RefCounted)
     old, new = @atomic rc.counter + 1
-    Core.println("[runtime] increment!: $old -> $new")
     old == 0 && error("Use-after-free: $old -> $new")
     return
 end
@@ -56,6 +54,7 @@ function rc_scan!(@nospecialize(x))
     for f in 1:fieldcount(typeof(x))
         v = Base.getfield(x, f)
         if v isa RefCounted
+            Core.println("[arcscan] found RefCounted")
             decrement!(v)
         end
     end
