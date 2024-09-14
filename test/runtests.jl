@@ -30,7 +30,7 @@ const CC = Core.Compiler
     #     x = RefCounted() # stmt 1
     #     return x         # stmt 2
     # end
-    @testset "Single block function" begin
+    @testset "Single block function, return RefCounted" begin
         bb1 = CC.BasicBlock(CC.StmtRange(1, 2))
         cfg = CC.CFG([bb1], [])
 
@@ -78,9 +78,11 @@ end
         @test COUNTER[] == 0
     end
 
-    @testset "For loop, no use" begin
+    @testset "For loop with 1 static iteration" begin
+        # Loop is eliminated, resulting in BB with 1 statement.
+        # In this case we insert dtor as a 1st stmt in the successor block.
         function f()
-            for _ in 1:2 # TODO `1:1` loop results in `Unreachable reached`.
+            for _ in 1:1
                 x = RefCounted(:x, global_dtor)
             end
             return
@@ -88,6 +90,20 @@ end
 
         COUNTER[] = -1
         RefCounting.execute(f)
+        @test COUNTER[] == 0
+    end
+
+    @testset "For loop with 1 dynamic iteration" begin
+        # Loop is not eliminated so we insert dtor call at the end of the loop BB.
+        function f(n)
+            for _ in 1:n
+                x = RefCounted(:x, global_dtor)
+            end
+            return
+        end
+
+        COUNTER[] = -1
+        RefCounting.execute(f, 1)
         @test COUNTER[] == 0
     end
 end

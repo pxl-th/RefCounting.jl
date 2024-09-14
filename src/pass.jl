@@ -13,6 +13,8 @@ function refcount_pass!(ir::CC.IRCode)
     # definitions and uses in that IR.
     ir, defuses = find_rcs!(ir)
 
+    ir = debug!(ir)
+
     if !isempty(defuses)
         Core.println("Defuses:")
         for defuse in defuses
@@ -32,6 +34,19 @@ function refcount_pass!(ir::CC.IRCode)
     end
 
     ir = rc_insertion!(ir, defuses, exits)
+    return ir
+end
+
+function debug!(ir)
+    Core.println("=== debug ===")
+
+    blocks = ir.cfg.blocks
+    for (bid, block) in enumerate(blocks)
+        for bstmt in block.stmts
+            @show bid, block, ir.stmts[bstmt][:stmt]
+        end
+    end
+
     return ir
 end
 
@@ -103,7 +118,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
             is_incrementing, is_new_ref,
             gc_preserve_begin, gc_preserve_end, attach_arcscan,
         ) = stmt_kind(stmt, compact)
-        Core.println("stmt kind: $is_incrementing, $is_new_ref, $gc_preserve_begin, $gc_preserve_end, $attach_arcscan")
+        # Core.println("stmt kind: $is_incrementing, $is_new_ref, $gc_preserve_begin, $gc_preserve_end, $attach_arcscan")
 
         # If `stmt` is a call to `gc_preserve_end`, then extend
         # its arg lifetime up to this point (mark as a use).
@@ -125,7 +140,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         is_ϕ = stmt isa CC.PhiNode
         has_arcuse = false
         # TODO if value is not used, we lose tracking...
-        Core.println("is rc: $is_rc, is_ϕ: $is_ϕ, $(CC.widenconst(inst[:type]))")
+        # Core.println("is rc: $is_rc, is_ϕ: $is_ϕ, $(CC.widenconst(inst[:type]))")
 
         # If ϕ stmt returns a `RefCounted` it also starts a new chain.
         # Process each of its edges.
@@ -149,6 +164,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 defuse ≡ nothing && continue
                 @assert idx ∉ defuse.defs "$idx in defs: $(defuse.defs): $stmt, $use"
                 @assert idx ∉ defuse.uses "$idx in uses: $(defuse.uses): $stmt, $use"
+                Core.println("New RC use: $use -> $idx")
                 push!(defuse.uses, idx)
 
                 # If `stmt` is a `gc_preserve_begin` call, then add
@@ -193,7 +209,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         if stmt isa CC.UpsilonNode
             # does not start a new value chain
             # XXX
-            Core.println("[???] UpsilonNode")
+            # Core.println("[???] UpsilonNode")
             continue
         end
 
@@ -209,7 +225,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
             # @assert idx ∉ defuse.defs "isrc $idx in defs: $(defuse.defs): $stmt, $val"
             # @assert idx ∉ defuse.uses "isrc $idx in uses: $(defuse.uses): $stmt, $val"
             push!(defuse.defs, idx)
-            Core.println("New RC def: $idx")
+            Core.println("New RC def: $val -> $idx")
 
             if is_new_ref
                 insert_increment!(
@@ -240,9 +256,11 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
     }}()
 
     for defuse in defuses
+        @show defuse
         live_ins::CC.BlockLiveness = CC.compute_live_ins(
             cfg, sort(defuse.defs), defuse.uses)
 
+        @show live_ins
         bbs = copy(live_ins.def_bbs)
         isempty(live_ins.live_in_bbs) || append!(bbs, live_ins.live_in_bbs)
 
@@ -254,6 +272,7 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
             # and count how many of them are in `bbs`.
             succs = cfg.blocks[bb].succs
             live_succs = count(bb -> bb ∈ bbs, succs)
+            @show succs, live_succs
 
             # If no successors, then this is an unconditional exit.
             if live_succs == 0
@@ -291,16 +310,37 @@ function rc_insertion!(
     for (def, exits, cond_exits) in all_exits
         # Insert decrements for unconditional exits.
         for bb in exits
-            terminator = last(blocks[bb].stmts)
-            inst = ir.stmts[terminator]
+            @show bb, length(blocks[bb].stmts)
+            for idx in blocks[bb].stmts
+                @show ir.stmts[idx][:stmt]
+            end
+
+            block_stmts = blocks[bb].stmts
+
+            # if CC.is_known_call(stmt, Main.RefCounted, ir)
+            if length(block_stmts) == 1
+                # TODO check if BB contains only one stmt and it is RefCounted ctor:
+                # then either insert after this stmt or use immediate successor's first stmt
+                #
+                # either case is fine, since it is not a loop if it has only 1 stmt
+                terminator = first(blocks[bb + 1].stmts)
+                inst = ir.stmts[terminator]
+                stmt = inst[:stmt]
+            else
+                terminator = last(block_stmts)
+                inst = ir.stmts[terminator]
+                stmt = inst[:stmt]
+            end
+
             insert_decrement!(
                 CC.InsertBefore(ir, CC.SSAValue(terminator)),
                 inst[:line], def)
 
             Core.println("""Inserting decrement:
-                - stmt: $(inst[:stmt])
+                - stmt: $stmt
                 - line $(inst[:line])
                 - def: $def
+                - exit: $bb
                 - terminator: $terminator""")
         end
 

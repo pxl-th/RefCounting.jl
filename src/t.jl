@@ -23,12 +23,12 @@ function f2()
 end
 
 function loop(n)
-    for i in 1:n
-        # This finalizes every iteration.
-        x = RefCounted(1, dtor)
+    for i in 1:1
+        # # This finalizes every iteration.
+        # x = RefCounted(1, dtor)
 
-        # # This does not.
-        # RefCounted(1, dtor)
+        # This does not.
+        RefCounted(1, dtor)
     end
     return
 end
