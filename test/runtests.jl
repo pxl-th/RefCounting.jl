@@ -106,4 +106,26 @@ end
         RefCounting.execute(f, 1)
         @test COUNTER[] == 0
     end
+
+    @testset "For loop with 10 iterations, creating 10 RefCounted objects" begin
+        # Test that at the end of every loop iteration,
+        # created RefCounted is destroyed.
+        counters = fill(-1, 10)
+        current_id = 1
+        function array_dtor(obj, counter)
+            counters[current_id] = counter
+            current_id += 1
+            return
+        end
+
+        function f(n)
+            for _ in 1:n
+                x = RefCounted(:x, array_dtor)
+            end
+            return
+        end
+
+        RefCounting.execute(f, 10)
+        @test all(counters .== 0)
+    end
 end
