@@ -22,12 +22,20 @@ function f2()
     return
 end
 
-function loop(n)
+function loop1()
     for i in 1:1
-        # # This finalizes every iteration.
         # x = RefCounted(1, dtor)
+        RefCounting.RefCounted(1, dtor)
 
-        # This does not.
+        RefCounting.RefCounted(1, dtor)
+    end
+    return
+end
+
+function loop2(n)
+    for i in 1:n
+        x = RefCounted(1, dtor)
+
         RefCounted(1, dtor)
     end
     return
@@ -37,7 +45,8 @@ function main()
     # RefCounting.execute(f, RefCounted(:x, dtor))
     # RefCounting.execute(f1)
     # RefCounting.execute(f2)
-    RefCounting.execute(loop, 1)
+    RefCounting.execute(loop1)
+    # RefCounting.execute(loop2, 2)
     return
 end
 main()

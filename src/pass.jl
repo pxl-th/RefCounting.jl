@@ -312,22 +312,20 @@ function rc_insertion!(
         for bb in exits
             @show bb, length(blocks[bb].stmts)
             for idx in blocks[bb].stmts
-                @show ir.stmts[idx][:stmt]
+                @show idx, ir.stmts[idx][:stmt]
             end
 
             block_stmts = blocks[bb].stmts
-
-            # if CC.is_known_call(stmt, Main.RefCounted, ir)
-            if length(block_stmts) == 1
+            terminator = last(block_stmts)
+            inst = ir.stmts[terminator]
+            stmt = inst[:stmt]
+            # TODO ensure there is a successor block?
+            if CC.is_known_call(stmt, RefCounted, ir)
                 # TODO check if BB contains only one stmt and it is RefCounted ctor:
                 # then either insert after this stmt or use immediate successor's first stmt
                 #
                 # either case is fine, since it is not a loop if it has only 1 stmt
                 terminator = first(blocks[bb + 1].stmts)
-                inst = ir.stmts[terminator]
-                stmt = inst[:stmt]
-            else
-                terminator = last(block_stmts)
                 inst = ir.stmts[terminator]
                 stmt = inst[:stmt]
             end

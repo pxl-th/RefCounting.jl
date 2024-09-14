@@ -93,6 +93,30 @@ end
         @test COUNTER[] == 0
     end
 
+    @testset "For loop with 1 static iteration, multiple RefCounted objects within a loop" begin
+        counters = fill(-1, 2)
+        current_id = 1
+        function array_dtor(obj, counter)
+            counters[current_id] = counter
+            current_id += 1
+            return
+        end
+
+        # Loop is eliminated, resulting in BB with 1 statement.
+        # In this case we insert dtor as a 1st stmt in the successor block.
+        function f()
+            for _ in 1:1
+                RefCounted(:x, array_dtor)
+
+                RefCounted(:y, array_dtor)
+            end
+            return
+        end
+
+        RefCounting.execute(f)
+        @test all(counters .== 0)
+    end
+
     @testset "For loop with 1 dynamic iteration" begin
         # Loop is not eliminated so we insert dtor call at the end of the loop BB.
         function f(n)
