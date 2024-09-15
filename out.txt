@@ -1,0 +1,1905 @@
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 2
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :counter)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 5
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :dtor)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 6
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 7
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :counter)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [2, 5, 6, 7])
+=== exits ===
+Exits:
+ - Core.Argument(2): [2] | [1 => 3]
+Inserting decrement:
+- use_succ_block: false
+- Expr
+- stmt: (%5)(%6, %7)
+- line 2
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 2
+- terminator: 8
+=== RC ===
+Argument 3 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(3) -> 1
+New RC use: Core.Argument(3) -> 2
+Inserting increment for userefs:
+- stmt: return _3
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(3) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(3), Int64[], [1, 2])
+=== exits ===
+Exits:
+ - Core.Argument(3): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return _3
+- line 3
+- inst typ: Any
+- def: Core.Argument(3)
+- def stmt: Core.Argument(3)
+- exit: 1
+- terminator: 2
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, _3) (Any[Core.Argument(3)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, _3) (Any[Core.Argument(3)])
+
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], Int64[])
+=== exits ===
+Exits:
+ - Core.Argument(2): Int64[] | Pair{Int64, Int64}[]
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 2
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 2
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :counter)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 5
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 6
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :counter)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [2, 5, 6])
+=== exits ===
+Exits:
+ - Core.Argument(2): [2] | [1 => 3]
+Inserting decrement:
+- use_succ_block: false
+- Expr
+- stmt: (dtor)(%5, %6)
+- line 2
+- inst typ: Core.Const(nothing)
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 2
+- terminator: 7
+=== RC ===
+Argument 3 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(3) -> 1
+New RC use: Core.Argument(3) -> 2
+Inserting increment for userefs:
+- stmt: return _3
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(3) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(3), Int64[], [1, 2])
+=== exits ===
+Exits:
+ - Core.Argument(3): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return _3
+- line 3
+- inst typ: Any
+- def: Core.Argument(3)
+- def stmt: Core.Argument(3)
+- exit: 1
+- terminator: 2
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, _3) (Any[Core.Argument(3)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, _3) (Any[Core.Argument(3)])
+
+=== RC ===
+New RC def: %5 -> 5
+New RC use: %5 -> 6
+Inserting increment for userefs:
+- stmt: RefCounting.finalizer(RefCounting.var"#4#5"(), %5)
+- is_new_ref: false
+- is_rc: true
+- use: %5 (Core.SSAValue)
+New RC def: %6 -> 6
+New RC use: %6 -> 7
+Inserting increment for userefs:
+- stmt: return %6
+- is_new_ref: false
+- is_rc: false
+- use: %6 (Core.SSAValue)
+Defuses:
+ - RefCounting.DefUse(:(%5), [5], [6])
+ - RefCounting.DefUse(:(%6), [6], [7])
+=== exits ===
+Exits:
+ - %5: [5] | Pair{Int64, Int64}[]
+ - %6: [5] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %6
+- line 2
+- inst typ: Any
+- def: %5
+- def stmt: %new(RefCounted{Base.RefValue{Int64}}, _2, _3, 0x0000000000000001)
+- exit: 5
+- terminator: 7
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %6
+- line 2
+- inst typ: Any
+- def: %6
+- def stmt: RefCounting.finalizer(RefCounting.var"#4#5"(), %5)
+- exit: 5
+- terminator: 7
+=== RC ===
+New RC def: %1 -> 1
+New RC use: %1 -> 2
+Inserting increment for userefs:
+- stmt: return %1
+- is_new_ref: false
+- is_rc: false
+- use: %1 (Core.SSAValue)
+Defuses:
+ - RefCounting.DefUse(:(%1), [1], [2])
+=== exits ===
+Exits:
+ - %1: [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: %1
+- def stmt: (RefCounted{Base.RefValue{Int64}})(_2, _3)
+- exit: 1
+- terminator: 2
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, %1) (Any[:(%1)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, %1) (Any[:(%1)])
+
+=== RC ===
+New RC def: %1 -> 1
+New RC use: %1 -> 2
+Inserting increment for userefs:
+- stmt: return %1
+- is_new_ref: false
+- is_rc: false
+- use: %1 (Core.SSAValue)
+Defuses:
+ - RefCounting.DefUse(:(%1), [1], [2])
+=== exits ===
+Exits:
+ - %1: [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return %1
+- line 0
+- inst typ: Any
+- def: %1
+- def stmt: (RefCounted{Base.RefValue{Int64}})(_2, _3)
+- exit: 1
+- terminator: 2
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, %1) (Any[:(%1)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, %1) (Any[:(%1)])
+
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+=== exits ===
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 4
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 6
+Inserting increment for userefs:
+- stmt: return _2
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1, 4, 6])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return _2
+- line 2
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 6
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, _2) (Any[Core.Argument(2)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, _2) (Any[Core.Argument(2)])
+
+=== RC ===
+Argument 2 is `RefCounted` RefCounted{Base.RefValue{Int64}}
+New RC use: Core.Argument(2) -> 1
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 4
+Inserting increment for userefs:
+- stmt: Base.getproperty(_2, :obj)
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+New RC use: Core.Argument(2) -> 6
+Inserting increment for userefs:
+- stmt: return _2
+- is_new_ref: false
+- is_rc: false
+- use: Core.Argument(2) (Core.Argument)
+Defuses:
+ - RefCounting.DefUse(Core.Argument(2), Int64[], [1, 4, 6])
+=== exits ===
+Exits:
+ - Core.Argument(2): [1] | Pair{Int64, Int64}[]
+Inserting decrement:
+- use_succ_block: false
+- Core.ReturnNode
+- stmt: return _2
+- line 2
+- inst typ: Any
+- def: Core.Argument(2)
+- def stmt: Core.Argument(2)
+- exit: 1
+- terminator: 6
+[deduplication] found consecutive inc-dec ops:
+    - stmt: Core._call_within(nothing, RefCounting.increment!, _2) (Any[Core.Argument(2)])
+    - next_stmt: Core._call_within(nothing, RefCounting.decrement!, _2) (Any[Core.Argument(2)])
+
+=== RC ===
+New RC def: %2 -> 2
+New RC use: %2 -> 4
+Inserting increment for userefs:
+- stmt: Main.use(%2)
+- is_new_ref: false
+- is_rc: true
+- use: %2 (Core.SSAValue)
+New RC def: %4 -> 4
+Defuses:
+ - RefCounting.DefUse(:(%4), [4], Int64[])
+ - RefCounting.DefUse(:(%2), [2], [4])
+=== exits ===
+Exits:
+ - %4: [2] | Pair{Int64, Int64}[]
+ - %2: [2] | [1 => 3]
+Inserting decrement:
+- use_succ_block: false
+- Expr
+- stmt: Main.use(%2)
+- line 3
+- inst typ: Core.PartialStruct(RefCounted{Base.RefValue{Int64}}, Any[Base.RefValue{Int64}, Core.Const(dtor), UInt64])
+- def: %4
+- def stmt: Main.use(%2)
+- exit: 2
+- terminator: 4
+Inserting decrement:
+- use_succ_block: false
+- Expr
+- stmt: Main.use(%2)
+- line 3
+- inst typ: Core.PartialStruct(RefCounted{Base.RefValue{Int64}}, Any[Base.RefValue{Int64}, Core.Const(dtor), UInt64])
+- def: %2
+- def stmt: Main.RefCounted(%1, Main.dtor)
+- exit: 2
+- terminator: 4
+rc finalizer
+⋅ dtor: 2
+ERROR: LoadError: MethodError: no method matching decrement!(::Nothing)
+The function `decrement!` exists, but no method is defined for this combination of argument types.
+
+Closest candidates are:
+  decrement!(!Matched::RefCounted)
+   @ RefCounting ~/code/RefCounting.jl/src/rc.jl:27
+
+Stacktrace:
+ [1] f1(b::Bool)
+   @ Main ~/code/RefCounting.jl/src/t.jl:18
+ [2] #invoke_within#4
+   @ ./essentials.jl:1077 [inlined]
+ [3] invoke_within
+   @ ./essentials.jl:1074 [inlined]
+ [4] #execute#3
+   @ ~/code/RefCounting.jl/src/RefCounting.jl:45 [inlined]
+ [5] execute
+   @ ~/code/RefCounting.jl/src/RefCounting.jl:43 [inlined]
+ [6] main()
+   @ Main ~/code/RefCounting.jl/src/t.jl:26
+ [7] top-level scope
+   @ ~/code/RefCounting.jl/src/t.jl:29
+in expression starting at /home/pxlth/code/RefCounting.jl/src/t.jl:29
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (2, 4)
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(Base.getproperty(_2, :dtor)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (7, :(Base.getproperty(_2, :counter)))
+(idx, (ir.stmts[idx])[:stmt]) = (8, :((%5)(%6, %7)))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Core.finalizer(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return _3))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getfield(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (2, 3)
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(Base.getproperty(_2, :counter)))
+(idx, (ir.stmts[idx])[:stmt]) = (7, :((dtor)(%5, %6)))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Core.finalizer(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return _3))
+(bb, length((blocks[bb]).stmts)) = (5, 3)
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(%new(RefCounted{Base.RefValue{Int64}}, _2, _3, 0x0000000000000001)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(RefCounting.finalizer(RefCounting.var"#4#5"(), %5)))
+(idx, (ir.stmts[idx])[:stmt]) = (7, :(return %6))
+(bb, length((blocks[bb]).stmts)) = (5, 3)
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(%new(RefCounted{Base.RefValue{Int64}}, _2, _3, 0x0000000000000001)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(RefCounting.finalizer(RefCounting.var"#4#5"(), %5)))
+(idx, (ir.stmts[idx])[:stmt]) = (7, :(return %6))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :((RefCounted{Base.RefValue{Int64}})(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 2)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :((RefCounted{Base.RefValue{Int64}})(_2, _3)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(return %1))
+(bb, length((blocks[bb]).stmts)) = (1, 6)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(Base.getindex(%1)))
+(idx, (ir.stmts[idx])[:stmt]) = (3, :(%2 + 1))
+(idx, (ir.stmts[idx])[:stmt]) = (4, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(Base.setindex!(%4, %3)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(return _2))
+(bb, length((blocks[bb]).stmts)) = (1, 6)
+(idx, (ir.stmts[idx])[:stmt]) = (1, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (2, :(Base.getindex(%1)))
+(idx, (ir.stmts[idx])[:stmt]) = (3, :(%2 + 1))
+(idx, (ir.stmts[idx])[:stmt]) = (4, :(Base.getproperty(_2, :obj)))
+(idx, (ir.stmts[idx])[:stmt]) = (5, :(Base.setindex!(%4, %3)))
+(idx, (ir.stmts[idx])[:stmt]) = (6, :(return _2))
+(bb, length((blocks[bb]).stmts)) = (2, 1)
+(idx, (ir.stmts[idx])[:stmt]) = (4, :(Main.use(%2)))
+(bb, length((blocks[bb]).stmts)) = (2, 1)
+(idx, (ir.stmts[idx])[:stmt]) = (4, :(Main.use(%2)))

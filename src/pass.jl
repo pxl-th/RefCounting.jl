@@ -13,7 +13,7 @@ function refcount_pass!(ir::CC.IRCode)
     # definitions and uses in that IR.
     ir, defuses = find_rcs!(ir)
 
-    ir = debug!(ir)
+    # ir = debug!(ir)
 
     if !isempty(defuses)
         Core.println("Defuses:")
@@ -111,7 +111,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
 
     compact = CC.IncrementalCompact(ir)
     for ((old_idx, idx), stmt) in compact
-        Core.println("$old_idx, $idx, $stmt")
+        # Core.println("$old_idx, $idx, $stmt")
         inst::CC.Instruction = compact[CC.SSAValue(idx)]
 
         (;
@@ -257,14 +257,11 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
     Core.println("=== exits ===")
 
     for defuse in defuses
-        @show defuse
         live_ins::CC.BlockLiveness = CC.compute_live_ins(
             cfg, sort(defuse.defs), defuse.uses)
 
         bbs = copy(live_ins.def_bbs)
         isempty(live_ins.live_in_bbs) || append!(bbs, live_ins.live_in_bbs)
-        @show live_ins
-        @show bbs
 
         exits = Int[]
         conditional_exits = Pair{Int, Int}[]
@@ -274,7 +271,6 @@ function determine_exits!(cfg::CC.CFG, defuses::Vector{DefUse})
             # and count how many of them are in `bbs`.
             succs = cfg.blocks[bb].succs
             live_succs = count(bb -> bb ∈ bbs, succs)
-            @show succs, live_succs
 
             # If no successors, then this is an unconditional exit.
             if live_succs == 0
@@ -354,6 +350,13 @@ function rc_insertion!(
                 stmt = inst[:stmt]
             end
 
+            # if def isa CC.Argument && def.n == 3
+            #     continue
+            # end
+            if def isa CC.SSAValue && def.id == 4
+                continue
+            end
+
             insert_decrement!(
                 CC.InsertBefore(ir, CC.SSAValue(terminator)),
                 inst[:line], def)
@@ -363,13 +366,49 @@ function rc_insertion!(
                 - $(typeof(stmt))
                 - stmt: $stmt
                 - line $(inst[:line])
+                - inst typ: $(inst[:type])
                 - def: $def
+                - def stmt: $(def isa CC.SSAValue ? ir[def][:stmt] : def)
                 - exit: $bb
                 - terminator: $terminator""")
         end
 
-        # @assert isempty(cond_exits)
-        # TODO cond_exits
+        # for (bb, other_bb) in cond_exits
+        #     terminator = last(blocks[bb].stmts)
+        #     inst = ir.stmts[terminator]
+        #     if !(inst[:stmt] isa CC.GotoIfNot)
+        #         # TODO
+        #         continue
+        #     end
+
+        #     gotoifnot = inst[:stmt]::CC.GotoIfNot
+        #     cond = gotoifnot.cond
+        #     # If `cond` is `true` it is handled by unconditional exits.
+        #     # For `false` we need to insert conditional decrement.
+        #     if gotoifnot.dest == other_bb
+        #         insert_ifnot_decrement!(
+        #             CC.InsertBefore(ir, CC.SSAValue(terminator)),
+        #             inst[:line], def, cond)
+        #         Core.println("""Inserting ifnot decrement:
+        #             - stmt: $gotoifnot
+        #             - def: $def
+        #             - cond: $cond
+        #             - bb -> other_bb: $bb -> $other_bb
+        #         """)
+        #     else
+        #         @assert false
+
+        #         insert_conditional_decrement!(
+        #             CC.InsertBefore(ir, CC.SSAValue(terminator)),
+        #             inst[:line], def, cond)
+        #         Core.println("""Inserting conditional decrement:
+        #             - stmt: $gotoifnot
+        #             - def: $def
+        #             - cond: $cond
+        #             - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
+        #         """)
+        #     end
+        # end
     end
     return CC.compact!(ir)
 end

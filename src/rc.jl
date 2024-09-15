@@ -35,6 +35,18 @@ function decrement!(rc::RefCounted)
     return
 end
 
+function decrement_ifnot!(rc::RefCounted, cond)
+    if !cond
+        decrement!(rc)
+    end
+end
+
+function decrement_conditional!(rc::RefCounted, cond)
+    if cond
+        decrement!(rc)
+    end
+end
+
 function increment!(rc::RefCounted)
     old, new = @atomic rc.counter + 1
     old == 0 && error("Use-after-free: $old -> $new")
@@ -64,6 +76,22 @@ function insert_decrement!(inserter, line, val)
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
         GlobalRef(RefCounting, :decrement!), val)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    inserter(new_inst)
+end
+
+function insert_ifnot_decrement!(inserter, line, val, cond)
+    new_node = Expr(:call,
+        GlobalRef(Core, :_call_within), nothing,
+        GlobalRef(RefCounting, :decrement_ifnot!), val, cond)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    inserter(new_inst)
+end
+
+function insert_conditional_decrement!(inserter, line, val, cond)
+    new_node = Expr(:call,
+        GlobalRef(Core, :_call_within), nothing,
+        GlobalRef(RefCounting, :decrement_conditional!), val, cond)
     new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
     inserter(new_inst)
 end

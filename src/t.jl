@@ -7,7 +7,7 @@ end
 
 @noinline function use(x)
     x.obj[] += 1
-    return
+    return x
 end
 
 dtor(_, c) = Core.println("⋅ dtor: $c")
@@ -23,7 +23,7 @@ end
 function main()
     # RefCounting.execute(f, RefCounted(:x, dtor))
     # TODO handle cond exits:
-    RefCounting.execute(f1, false)
+    RefCounting.execute(f1, true)
     return
 end
 main()
