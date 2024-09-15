@@ -173,30 +173,30 @@ end
         @test obj_val == 2
     end
 
-    # @testset "Conditional use" begin
-    #     obj_val = -1
-    #     function use(x)
-    #         x.obj[] += 1
-    #         obj_val = x.obj[]
-    #         return
-    #     end
+    @testset "Conditional use" begin
+        obj_val = -1
+        function use(x)
+            x.obj[] += 1
+            obj_val = x.obj[]
+            return
+        end
 
-    #     function f(b)
-    #         x = RefCounted(Ref(1), global_dtor)
-    #         if b
-    #             use(x)
-    #         end
-    #         return
-    #     end
+        function f(b)
+            x = RefCounted(Ref(1), global_dtor)
+            if b
+                use(x)
+            end
+            return
+        end
 
-    #     COUNTER[] = -1
-    #     RefCounting.execute(f, false)
-    #     @test COUNTER[] == 0
-    #     @test obj_val == -1
+        COUNTER[] = -1
+        RefCounting.execute(f, false)
+        @test COUNTER[] == 0
+        @test obj_val == -1
 
-    #     # COUNTER[] = -1
-    #     # RefCounting.execute(f, true)
-    #     # @test COUNTER[] == 0
-    #     # @test obj_val == 2
-    # end
+        COUNTER[] = -1
+        RefCounting.execute(f, true)
+        @test COUNTER[] == 0
+        @test obj_val == 2
+    end
 end

@@ -27,6 +27,8 @@ is_rctype(T::Type) = T !== Union{} && T <: RefCounted
 function decrement!(rc::RefCounted)
     old, new = @atomic rc.counter - 1
 
+    Core.println("decrement: $old -> $new")
+
     if new == 0
         rc.dtor(rc.obj, rc.counter)
     elseif new == typemax(UInt)
@@ -72,12 +74,13 @@ function rc_scan!(@nospecialize(x))
     end
 end
 
-function insert_decrement!(inserter, line, val)
+function insert_decrement!(inserter, line, val, attach_after)
+    @assert inserter isa CC.InsertBefore
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
         GlobalRef(RefCounting, :decrement!), val)
     new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
-    inserter(new_inst)
+    CC.insert_node!(inserter.src, inserter.pos, new_inst, attach_after)
 end
 
 function insert_ifnot_decrement!(inserter, line, val, cond)

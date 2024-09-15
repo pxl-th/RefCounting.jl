@@ -13,7 +13,7 @@ function refcount_pass!(ir::CC.IRCode)
     # definitions and uses in that IR.
     ir, defuses = find_rcs!(ir)
 
-    # ir = debug!(ir)
+    ir = debug!(ir)
 
     if !isempty(defuses)
         Core.println("Defuses:")
@@ -308,11 +308,6 @@ function rc_insertion!(
     for (def, exits, cond_exits) in all_exits
         # Insert decrements for unconditional exits.
         for bb in exits
-            @show bb, length(blocks[bb].stmts)
-            for idx in blocks[bb].stmts
-                @show idx, ir.stmts[idx][:stmt]
-            end
-
             block_stmts = blocks[bb].stmts
             terminator = last(block_stmts)
             inst = ir.stmts[terminator]
@@ -320,8 +315,8 @@ function rc_insertion!(
 
             is_return_stmt = stmt isa Core.ReturnNode
 
-            # If exit BB terminator stmt is a RefCounted ctor,
-            # insert decrement in the 1st stmt of the successor block.
+            # If exit BB contains 1 stmt and it is a RefCounted `def`,
+            # insert decrement after the terminator stmt.
             #
             # This may happen in a case where a loop is optimized away, e.g.:
             # for i in 1:1
@@ -330,39 +325,15 @@ function rc_insertion!(
             #
             # In this case the for-loop BB will contain only 1 stmt which is
             # a RefCounted ctor.
-            use_succ_block = (
+            attach_after = (
                 CC.is_known_call(stmt, RefCounted, ir)
-                # || (
-                #     length(blocks[bb].stmts) == 1 &&
-                #     length(blocks) ≥ bb + 1 &&
-                #     !is_return_stmt
-                # )
-            )
-            if use_succ_block
-                Core.println("--- use_succ_block")
-                @assert length(blocks) ≥ bb + 1
-                for idx in blocks[bb + 1].stmts
-                    @show idx, ir.stmts[idx][:stmt]
-                end
-
-                terminator = first(blocks[bb + 1].stmts)
-                inst = ir.stmts[terminator]
-                stmt = inst[:stmt]
-            end
-
-            # if def isa CC.Argument && def.n == 3
-            #     continue
-            # end
-            if def isa CC.SSAValue && def.id == 4
-                continue
-            end
-
+                || (length(blocks[bb].stmts) == 1 && !is_return_stmt))
             insert_decrement!(
                 CC.InsertBefore(ir, CC.SSAValue(terminator)),
-                inst[:line], def)
+                inst[:line], def, attach_after)
 
             Core.println("""Inserting decrement:
-                - use_succ_block: $use_succ_block
+                - attach_after: $attach_after
                 - $(typeof(stmt))
                 - stmt: $stmt
                 - line $(inst[:line])
@@ -373,42 +344,42 @@ function rc_insertion!(
                 - terminator: $terminator""")
         end
 
-        # for (bb, other_bb) in cond_exits
-        #     terminator = last(blocks[bb].stmts)
-        #     inst = ir.stmts[terminator]
-        #     if !(inst[:stmt] isa CC.GotoIfNot)
-        #         # TODO
-        #         continue
-        #     end
+        for (bb, other_bb) in cond_exits
+            terminator = last(blocks[bb].stmts)
+            inst = ir.stmts[terminator]
+            if !(inst[:stmt] isa CC.GotoIfNot)
+                # TODO
+                continue
+            end
 
-        #     gotoifnot = inst[:stmt]::CC.GotoIfNot
-        #     cond = gotoifnot.cond
-        #     # If `cond` is `true` it is handled by unconditional exits.
-        #     # For `false` we need to insert conditional decrement.
-        #     if gotoifnot.dest == other_bb
-        #         insert_ifnot_decrement!(
-        #             CC.InsertBefore(ir, CC.SSAValue(terminator)),
-        #             inst[:line], def, cond)
-        #         Core.println("""Inserting ifnot decrement:
-        #             - stmt: $gotoifnot
-        #             - def: $def
-        #             - cond: $cond
-        #             - bb -> other_bb: $bb -> $other_bb
-        #         """)
-        #     else
-        #         @assert false
+            gotoifnot = inst[:stmt]::CC.GotoIfNot
+            cond = gotoifnot.cond
+            # If `cond` is `true` it is handled by unconditional exits.
+            # For `false` we need to insert conditional decrement.
+            if gotoifnot.dest == other_bb
+                insert_ifnot_decrement!(
+                    CC.InsertBefore(ir, CC.SSAValue(terminator)),
+                    inst[:line], def, cond)
+                Core.println("""Inserting ifnot decrement:
+                    - stmt: $gotoifnot
+                    - def: $def
+                    - cond: $cond
+                    - bb -> other_bb: $bb -> $other_bb
+                """)
+            else
+                @assert false
 
-        #         insert_conditional_decrement!(
-        #             CC.InsertBefore(ir, CC.SSAValue(terminator)),
-        #             inst[:line], def, cond)
-        #         Core.println("""Inserting conditional decrement:
-        #             - stmt: $gotoifnot
-        #             - def: $def
-        #             - cond: $cond
-        #             - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
-        #         """)
-        #     end
-        # end
+                insert_conditional_decrement!(
+                    CC.InsertBefore(ir, CC.SSAValue(terminator)),
+                    inst[:line], def, cond)
+                Core.println("""Inserting conditional decrement:
+                    - stmt: $gotoifnot
+                    - def: $def
+                    - cond: $cond
+                    - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
+                """)
+            end
+        end
     end
     return CC.compact!(ir)
 end
