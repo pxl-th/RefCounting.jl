@@ -111,14 +111,12 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
 
     compact = CC.IncrementalCompact(ir)
     for ((old_idx, idx), stmt) in compact
-        # Core.println("$old_idx, $idx, $stmt")
         inst::CC.Instruction = compact[CC.SSAValue(idx)]
 
         (;
             is_incrementing, is_new_ref,
             gc_preserve_begin, gc_preserve_end, attach_arcscan,
         ) = stmt_kind(stmt, compact)
-        # Core.println("stmt kind: $is_incrementing, $is_new_ref, $gc_preserve_begin, $gc_preserve_end, $attach_arcscan")
 
         # If `stmt` is a call to `gc_preserve_end`, then extend
         # its arg lifetime up to this point (mark as a use).
@@ -312,31 +310,36 @@ function rc_insertion!(
             terminator = last(block_stmts)
             inst = ir.stmts[terminator]
             stmt = inst[:stmt]
+            line = inst[:line]
 
             is_return_stmt = stmt isa Core.ReturnNode
+            is_def_terminator = def isa CC.SSAValue ?
+                ir[def][:line] == line :
+                false
 
-            # If exit BB contains 1 stmt and it is a RefCounted `def`,
-            # insert decrement after the terminator stmt.
+            # Attach decrement after `terminator`
+            # if `def` is on the same line as `terminator`.
             #
             # This may happen in a case where a loop is optimized away, e.g.:
             # for i in 1:1
             #     RefCounted(1, dtor)
             # end
             #
-            # In this case the for-loop BB will contain only 1 stmt which is
-            # a RefCounted ctor.
-            attach_after = (
-                CC.is_known_call(stmt, RefCounted, ir)
-                || (length(blocks[bb].stmts) == 1 && !is_return_stmt))
+            # Or in case where `use` returns `x` under-the-hood:
+            # if b
+            #     ...
+            #     use(x)
+            # end
+            attach_after = is_def_terminator && !is_return_stmt
             insert_decrement!(
                 CC.InsertBefore(ir, CC.SSAValue(terminator)),
-                inst[:line], def, attach_after)
+                line, def, attach_after)
 
             Core.println("""Inserting decrement:
                 - attach_after: $attach_after
                 - $(typeof(stmt))
                 - stmt: $stmt
-                - line $(inst[:line])
+                - line $line
                 - inst typ: $(inst[:type])
                 - def: $def
                 - def stmt: $(def isa CC.SSAValue ? ir[def][:stmt] : def)
