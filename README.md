@@ -13,7 +13,7 @@ Reference Counting Garbage Collection for Julia.
     
   ```julia
   function f()
-    x = RefCounted(Ref(1), dtor)
+    x = RefCounted(1)
     return
   end
   ```
@@ -23,7 +23,7 @@ Reference Counting Garbage Collection for Julia.
     
   ```julia
   function f()
-    x = RefCounted(Ref(1), dtor)
+    x = RefCounted(1)
     decrement!(x)
     return
   end
