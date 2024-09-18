@@ -9,12 +9,15 @@ Example:
 increment!(rc) <- removed
 decrement!(rc) <- also removed
 ...
-
 """
 function deduplication_pass!(ir::CC.IRCode)
     compact = CC.IncrementalCompact(ir)
     inc_ref = GlobalRef(@__MODULE__, :increment!)
     dec_ref = GlobalRef(@__MODULE__, :decrement!)
+
+    # TODO look up further than immediate next instruction.
+    # Some increment-decrement may be separated by more than one instruction.
+    # Ensure that they are in the same BB.
 
     delete_next = false
     for ((old_idx, idx), stmt) in compact

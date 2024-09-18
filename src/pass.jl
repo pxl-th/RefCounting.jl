@@ -137,13 +137,54 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         is_rc = is_rctype(CC.widenconst(inst[:type]))
         is_ϕ = stmt isa CC.PhiNode
         has_arcuse = false
-        # TODO if value is not used, we lose tracking...
-        # Core.println("is rc: $is_rc, is_ϕ: $is_ϕ, $(CC.widenconst(inst[:type]))")
 
         # If ϕ stmt returns a `RefCounted` it also starts a new chain.
         # Process each of its edges.
         if is_rc && is_ϕ
-            @assert false
+            Core.println("ϕ node handling")
+            ϕ = stmt::CC.PhiNode
+            cfg = compact.ir.cfg
+            ϕ_bb = CC.block_for_inst(cfg, old_idx)
+
+            # Go through ϕ edges BBs and mark terminator in those BBs
+            # as a use.
+            # Increment counter as well.
+            for (edge_id, from_bb) in enumerate(ϕ.edges)
+                terminator = last(cfg.blocks[from_bb].stmts)
+                val = ϕ.values[edge_id]
+
+                # Mark `terminator` as a use for ϕ i-th `val`.
+                defuse = get!(() -> DefUse(val, Int[], Int[]), defuses, val)
+                push!(defuse.uses, terminator)
+
+                # Insert `increment` before terminator `stmt`.
+                peek = CC.CompactPeekIterator(compact, terminator, terminator)
+                terminator_inst, _ = CC.iterate(peek)
+                if terminator_inst isa CC.GotoNode
+                    insert_increment!(
+                        CC.InsertBefore(compact, CC.SSAValue(terminator)),
+                        inst[:line], val)
+                    # TODO why use `inst[:line]` if we insert before terminator?
+                    # shouldn't we use terminator's line?
+                    Core.println("""Inserting increment in ϕ node:
+                        - stmt: $stmt
+                        - edge_id / val: $edge_id / $val
+                        - line: $(inst[:line])
+                        - terminator: $terminator
+                        - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
+                    """)
+                else
+                    if !(terminator_inst isa CC.GotoIfNot)
+                        Core.println("""[error] Unhandled control flow in ϕ node:
+                            - edge_id / :val: $edge_id / $val
+                            - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
+                        """)
+                        continue
+                    end
+
+                    # TODO conditional ifnot increment!
+                end
+            end
         # If `stmt` is not `RefCounted` or not a `CC.PhiNode`,
         # record all `uses` of it.
         else
@@ -212,7 +253,9 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
 
         # If so, then it is considered as another `def`.
         if is_rc
-            @assert !is_ϕ
+            # TODO ???
+            # @assert !is_ϕ
+            #
             # TODO `is_additional_def`
             @assert !CC.isexpr(stmt, :(=))
             @assert !CC.is_known_call(stmt, setfield!, compact)
@@ -351,7 +394,7 @@ function rc_insertion!(
             terminator = last(blocks[bb].stmts)
             inst = ir.stmts[terminator]
             if !(inst[:stmt] isa CC.GotoIfNot)
-                # TODO
+                Core.println("Unhandled control-flow: $(inst[:stmt])")
                 continue
             end
 

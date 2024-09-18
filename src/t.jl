@@ -15,7 +15,8 @@ function f1(b)
     else
         x
     end
-    return x
+    use(x)
+    return
 end
 
 function main()

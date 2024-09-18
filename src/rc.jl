@@ -51,6 +51,7 @@ end
 
 function increment!(rc::RefCounted)
     old, new = @atomic rc.counter + 1
+    Core.println("increment: $old -> $new")
     old == 0 && error("Use-after-free: $old -> $new")
     return
 end

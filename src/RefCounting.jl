@@ -84,6 +84,11 @@ function run_passes_ipo_safe!(
 
     CC.@pass "Inlining"  ir = CC.ssa_inlining_pass!(ir, opt.inlining, ci.propagate_inbounds)
     CC.@pass "compact 2" ir = CC.compact!(ir)
+
+    CC.@pass "rc ddp 2"  ir = deduplication_pass!(ir)
+
+    # CC.@pass "rc debug"  ir = debug!(ir)
+
     CC.@pass "SROA"      ir = CC.sroa_pass!(ir, opt.inlining)
     CC.@pass "ADCE"      (ir, made_changes) = CC.adce_pass!(ir, opt.inlining)
     if made_changes
@@ -103,11 +108,10 @@ include("rc.jl")
 include("defuse.jl")
 include("pass.jl")
 include("deduplication.jl")
+include("reflection.jl")
 
 function __init__()
     COMPILER_WORLD[] = ccall(:jl_get_tls_world_age, UInt, ())
 end
-
-precompile(CC.typeinf_ext_toplevel, (RCInterpreter, CC.MethodInstance))
 
 end
