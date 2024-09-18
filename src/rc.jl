@@ -56,6 +56,18 @@ function increment!(rc::RefCounted)
     return
 end
 
+function increment_ifnot!(rc::RefCounted, cond)
+    if !cond
+        increment!(rc)
+    end
+end
+
+function increment_conditional!(rc::RefCounted, cond)
+    if cond
+        increment!(rc)
+    end
+end
+
 const SCANNED = Base.WeakKeyDict{Any, Bool}()
 
 function rc_scan!(@nospecialize(x))
@@ -75,8 +87,7 @@ function rc_scan!(@nospecialize(x))
     end
 end
 
-function insert_decrement!(inserter, line, val, attach_after)
-    @assert inserter isa CC.InsertBefore
+function insert_decrement!(inserter, line, val, attach_after::Bool = false)
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
         GlobalRef(RefCounting, :decrement!), val)
@@ -100,10 +111,26 @@ function insert_conditional_decrement!(inserter, line, val, cond)
     inserter(new_inst)
 end
 
-function insert_increment!(inserter, line, val)
+function insert_increment!(inserter, line, val, attach_after::Bool = false)
     new_node = Expr(:call,
         GlobalRef(Core, :_call_within), nothing,
         GlobalRef(RefCounting, :increment!), val)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    CC.insert_node!(inserter.src, inserter.pos, new_inst, attach_after)
+end
+
+function insert_ifnot_increment!(inserter, line, val, cond)
+    new_node = Expr(:call,
+        GlobalRef(Core, :_call_within), nothing,
+        GlobalRef(RefCounting, :increment_ifnot!), val, cond)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    inserter(new_inst)
+end
+
+function insert_conditional_increment!(inserter, line, val, cond)
+    new_node = Expr(:call,
+        GlobalRef(Core, :_call_within), nothing,
+        GlobalRef(RefCounting, :increment_conditional!), val, cond)
     new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
     inserter(new_inst)
 end

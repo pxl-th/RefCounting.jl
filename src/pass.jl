@@ -9,11 +9,11 @@ Base.getindex(useref::CC.UseRef) = CC.getindex(useref)
 function refcount_pass!(ir::CC.IRCode)
     Core.println("=== RC ===")
 
+    ir = debug!(ir)
+
     # For an IRCode, find `RefCounted` statements and record their
     # definitions and uses in that IR.
     ir, defuses = find_rcs!(ir)
-
-    ir = debug!(ir)
 
     if !isempty(defuses)
         Core.println("Defuses:")
@@ -43,10 +43,9 @@ function debug!(ir)
     blocks = ir.cfg.blocks
     for (bid, block) in enumerate(blocks)
         for bstmt in block.stmts
-            @show bid, block, ir.stmts[bstmt][:stmt]
+            Core.println("bid $bid | stmt $bstmt | $(repr(ir.stmts[bstmt][:stmt]))")
         end
     end
-
     return ir
 end
 
@@ -112,6 +111,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
     compact = CC.IncrementalCompact(ir)
     for ((old_idx, idx), stmt) in compact
         inst::CC.Instruction = compact[CC.SSAValue(idx)]
+        @show typeof(stmt), typeof(inst), stmt
 
         (;
             is_incrementing, is_new_ref,
@@ -141,10 +141,10 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         # If ϕ stmt returns a `RefCounted` it also starts a new chain.
         # Process each of its edges.
         if is_rc && is_ϕ
-            Core.println("ϕ node handling")
             ϕ = stmt::CC.PhiNode
             cfg = compact.ir.cfg
             ϕ_bb = CC.block_for_inst(cfg, old_idx)
+            Core.println("ϕ node handling: $(length(ϕ.edges)) edges")
 
             # Go through ϕ edges BBs and mark terminator in those BBs
             # as a use.
@@ -153,22 +153,35 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 terminator = last(cfg.blocks[from_bb].stmts)
                 val = ϕ.values[edge_id]
 
-                # Mark `terminator` as a use for ϕ i-th `val`.
-                defuse = get!(() -> DefUse(val, Int[], Int[]), defuses, val)
-                push!(defuse.uses, terminator)
-
                 # Insert `increment` before terminator `stmt`.
                 peek = CC.CompactPeekIterator(compact, terminator, terminator)
                 terminator_inst, _ = CC.iterate(peek)
-                if terminator_inst isa CC.GotoNode
+
+                Core.println("$edge_id edge | from_bb $from_bb | terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt]) | terminator_inst: $(typeof(terminator_inst))")
+                # TODO document `terminator_inst isa Nothing`
+                if (
+                    terminator_inst isa CC.GotoNode
+                    || terminator_inst isa Nothing # TODO document this is a no-op (branch does nothing or identity)
+                    || terminator_inst isa Expr # TODO is this safe? does it mean it is a regular inst?
+                )
+                    terminator_stmt = compact[CC.SSAValue(terminator)][:stmt]
+                    is_return_stmt = terminator_stmt isa Core.ReturnNode
+                    @assert !is_return_stmt
+                    # attach_after = !is_return_stmt && is_def_terminator
+
+                    attach_after = (
+                        terminator_inst isa Nothing || terminator_inst isa Expr)
                     insert_increment!(
                         CC.InsertBefore(compact, CC.SSAValue(terminator)),
-                        inst[:line], val)
+                        inst[:line], val, attach_after)
+
                     # TODO why use `inst[:line]` if we insert before terminator?
                     # shouldn't we use terminator's line?
                     Core.println("""Inserting increment in ϕ node:
+                        - attach_after: $attach_after
                         - stmt: $stmt
-                        - edge_id / val: $edge_id / $val
+                        - edge_id: $edge_id
+                        - val: $val
                         - line: $(inst[:line])
                         - terminator: $terminator
                         - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
@@ -176,13 +189,46 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 else
                     if !(terminator_inst isa CC.GotoIfNot)
                         Core.println("""[error] Unhandled control flow in ϕ node:
-                            - edge_id / :val: $edge_id / $val
+                            - edge_id: $edge_id
+                            - val: $val
+                            - terminator inst: $(typeof(terminator_inst))
                             - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
                         """)
                         continue
                     end
 
-                    # TODO conditional ifnot increment!
+                    gotoifnot = terminator_inst::CC.GotoIfNot
+                    cond = gotoifnot.cond
+                    if gotoifnot.dest == ϕ_bb
+                        insert_ifnot_increment!(
+                            CC.InsertBefore(compact, CC.SSAValue(terminator)),
+                            inst[:line], val, cond)
+                        Core.println("""Inserting ifnot increment in ϕ node:
+                            - stmt: $stmt
+                            - edge_id / val: $edge_id / $val
+                            - line: $(inst[:line])
+                            - terminator: $terminator
+                            - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
+                        """)
+                    else
+                        @assert false
+                        insert_conditional_increment!(
+                            CC.InsertBefore(compact, CC.SSAValue(terminator)),
+                            inst[:line], val, cond)
+                        Core.println("""Inserting conditional increment in ϕ node:
+                            - stmt: $stmt
+                            - edge_id / val: $edge_id / $val
+                            - line: $(inst[:line])
+                            - terminator: $terminator
+                            - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
+                        """)
+                    end
+                end
+
+                # Mark `terminator` as a use for ϕ i-th `val` (if it is not a def already).
+                defuse = get!(() -> DefUse(val, Int[], Int[]), defuses, val)
+                if terminator ∉ defuse.defs
+                    push!(defuse.uses, terminator)
                 end
             end
         # If `stmt` is not `RefCounted` or not a `CC.PhiNode`,
@@ -413,17 +459,15 @@ function rc_insertion!(
                     - bb -> other_bb: $bb -> $other_bb
                 """)
             else
-                @assert false
-
-                insert_conditional_decrement!(
-                    CC.InsertBefore(ir, CC.SSAValue(terminator)),
-                    inst[:line], def, cond)
-                Core.println("""Inserting conditional decrement:
-                    - stmt: $gotoifnot
-                    - def: $def
-                    - cond: $cond
-                    - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
-                """)
+                # insert_conditional_decrement!(
+                #     CC.InsertBefore(ir, CC.SSAValue(terminator)),
+                #     inst[:line], def, cond)
+                # Core.println("""Inserting conditional decrement:
+                #     - stmt: $gotoifnot
+                #     - def: $def
+                #     - cond: $cond
+                #     - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
+                # """)
             end
         end
     end

@@ -87,7 +87,7 @@ function run_passes_ipo_safe!(
 
     CC.@pass "rc ddp 2"  ir = deduplication_pass!(ir)
 
-    # CC.@pass "rc debug"  ir = debug!(ir)
+    CC.@pass "rc debug"  ir = debug!(ir)
 
     CC.@pass "SROA"      ir = CC.sroa_pass!(ir, opt.inlining)
     CC.@pass "ADCE"      (ir, made_changes) = CC.adce_pass!(ir, opt.inlining)
