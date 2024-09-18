@@ -1,9 +1,11 @@
 # RefCounting.jl
 
+Reference Counting Garbage Collection for Julia.
+
 <table>
 <tr>
-  <td>Before</td>
-  <td>After</td>
+  <td>Before RC pass</td>
+  <td>After RC pass</td>
 </tr>
 
 <tr>
