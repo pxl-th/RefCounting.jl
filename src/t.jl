@@ -16,11 +16,9 @@ dtor(_, c) = Core.println("⋅ dtor: $c")
 # TODO test from this
 function f1(b)
     x = RefCounted(Ref(1), dtor)
-    x = if b
-        # x
+    if b
         use(x)
     else
-        # x # TODO if terminator inst is a nothing, just insert unconditional increment?
         use2(x)
     end
     use(x)

@@ -157,11 +157,17 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 peek = CC.CompactPeekIterator(compact, terminator, terminator)
                 terminator_inst, _ = CC.iterate(peek)
 
-                Core.println("$edge_id edge | from_bb $from_bb | terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt]) | terminator_inst: $(typeof(terminator_inst))")
-                # TODO document `terminator_inst isa Nothing`
                 if (
                     terminator_inst isa CC.GotoNode
+                    # one of the branches does nothing, e.g.:
+                    # if b
+                    #     use(x)
+                    # else
+                    #     x
+                    # end
                     || terminator_inst isa Nothing # TODO document this is a no-op (branch does nothing or identity)
+                    # terminator stmt is a regular instruction,
+                    # which may also be a `def`.
                     || terminator_inst isa Expr # TODO is this safe? does it mean it is a regular inst?
                 )
                     terminator_stmt = compact[CC.SSAValue(terminator)][:stmt]
@@ -169,6 +175,10 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     @assert !is_return_stmt
                     # attach_after = !is_return_stmt && is_def_terminator
 
+                    # Attach increment after if stmt is either nothing
+                    # or a regular instruction (which may also be a def).
+                    # Otherwise, it is a goto node and we want to insert
+                    # before.
                     attach_after = (
                         terminator_inst isa Nothing || terminator_inst isa Expr)
                     insert_increment!(
@@ -177,6 +187,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
 
                     # TODO why use `inst[:line]` if we insert before terminator?
                     # shouldn't we use terminator's line?
+
                     Core.println("""Inserting increment in ϕ node:
                         - attach_after: $attach_after
                         - stmt: $stmt
