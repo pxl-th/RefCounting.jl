@@ -169,6 +169,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     # terminator stmt is a regular instruction,
                     # which may also be a `def`.
                     || terminator_inst isa Expr # TODO is this safe? does it mean it is a regular inst?
+                    || terminator_inst isa CC.PhiNode
                 )
                     terminator_stmt = compact[CC.SSAValue(terminator)][:stmt]
                     is_return_stmt = terminator_stmt isa Core.ReturnNode
@@ -180,7 +181,10 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     # Otherwise, it is a goto node and we want to insert
                     # before.
                     attach_after = (
-                        terminator_inst isa Nothing || terminator_inst isa Expr)
+                        terminator_inst isa Nothing
+                        || terminator_inst isa Expr
+                        || terminator_inst isa CC.PhiNode # TODO ok to always insert after?
+                    )
                     insert_increment!(
                         CC.InsertBefore(compact, CC.SSAValue(terminator)),
                         inst[:line], val, attach_after)

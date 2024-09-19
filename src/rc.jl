@@ -21,6 +21,9 @@ end
 RefCounted(obj::T, dtor) where T = RefCounted{T}(obj, dtor)
 RefCounted(obj) = RefCounted(obj, (_, _) -> nothing)
 
+# Copy behaves like a ctor, copying `obj`.
+Base.copy(rc::RefCounted) = RefCounted(copy(rc.obj), rc.dtor)
+
 # `refcount` pass will use this to detect `RefCounted` objects.
 is_rctype(T::Type) = T !== Union{} && T <: RefCounted
 

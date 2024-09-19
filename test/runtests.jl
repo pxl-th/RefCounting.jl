@@ -262,4 +262,88 @@ end
         @test COUNTER[] == 0
         @test obj_val == 3 # 1 + 1 (use) + 1 (use)
     end
+
+    @testset "⋄ Nested Diamond ⋄" begin
+        obj_val = -1
+        function use(x)
+            x.obj[] += 1
+            obj_val = x.obj[]
+            return x
+        end
+
+        function use2(x)
+            x.obj[] += 2
+            obj_val = x.obj[]
+            return x
+        end
+
+        function use3(x)
+            x.obj[] += 3
+            obj_val = x.obj[]
+            return x
+        end
+
+        function f(b, c)
+            x = RefCounted(Ref(1), global_dtor)
+            x = if b
+                if c
+                    use(x)
+                else
+                    use3(x)
+                end
+            else
+                use2(x)
+            end
+            use(x)
+            return
+        end
+
+        function f2(b, c)
+            x = RefCounted(Ref(1), global_dtor)
+            x = if b
+                use(x)
+            else
+                if c
+                    use2(x)
+                else
+                    use3(x)
+                end
+            end
+            use(x)
+            return
+        end
+
+        COUNTER[] = -1
+        RefCounting.execute(f, false, false)
+        @test COUNTER[] == 0
+        @test obj_val == 4 # 1 + 2 (use2) + 1 (use)
+
+        COUNTER[] = -1
+        RefCounting.execute(f, true, false)
+        @test COUNTER[] == 0
+        @test obj_val == 5 # 1 + 1 (use) + 3 (use3)
+
+        COUNTER[] = -1
+        RefCounting.execute(f, true, true)
+        @test COUNTER[] == 0
+        @test obj_val == 3 # 1 + 1 (use) + 1 (use)
+
+        # f2
+
+        COUNTER[] = -1
+        RefCounting.execute(f2, false, false)
+        @test COUNTER[] == 0
+        @test obj_val == 5 # 1 + 3 (use3) + 1 (use)
+
+        COUNTER[] = -1
+        RefCounting.execute(f2, false, true)
+        @test COUNTER[] == 0
+        @test obj_val == 4 # 1 + 1 (use) + 2 (use2)
+
+        COUNTER[] = -1
+        RefCounting.execute(f2, true, true)
+        @test COUNTER[] == 0
+        @test obj_val == 3 # 1 + 1 (use) + 1 (use)
+
+    end
 end
