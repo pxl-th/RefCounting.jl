@@ -76,15 +76,40 @@ const SCANNED = Base.WeakKeyDict{Any, Bool}()
 function rc_scan!(@nospecialize(x))
     Core.println("RC scanning $x $(typeof(x))")
 
-    @lock SCANNED begin
-        haskey(SCANNED, x) && return
-        SCANNED[x] = true
-    end
+    # TODO
+    # @lock SCANNED begin
+    #     haskey(SCANNED, x) && return
+    #     SCANNED[x] = true
+    # end
 
     for f in 1:fieldcount(typeof(x))
         v = Base.getfield(x, f)
+        @show typeof(v), v isa RefCounted
         if v isa RefCounted
             Core.println("[arcscan] found RefCounted")
+            decrement!(v)
+        end
+    end
+end
+
+function immediate_rc_scan!(@nospecialize(x))
+    Core.println("Immediate RC scanning $x $(typeof(x))")
+
+    if x isa Ref && !isassigned(x)
+        return
+    end
+
+    # TODO
+    # @lock SCANNED begin
+    #     haskey(SCANNED, x) && return
+    #     SCANNED[x] = true
+    # end
+
+    for f in 1:fieldcount(typeof(x))
+        v = Base.getfield(x, f)
+        @show typeof(v), v isa RefCounted
+        if v isa RefCounted
+            Core.println("[im arcscan] found RefCounted")
             decrement!(v)
         end
     end
@@ -142,6 +167,14 @@ function insert_rcscan!(inserter, line, val)
     new_node = Expr(:call,
         GlobalRef(Core, :finalizer),
         GlobalRef(RefCounting, :rc_scan!), val)
+    new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
+    inserter(new_inst)
+end
+
+function insert_immediate_rcscan!(inserter, line, val)
+    new_node = Expr(:call,
+        GlobalRef(Core, :_call_within), nothing,
+        GlobalRef(RefCounting, :immediate_rc_scan!), val)
     new_inst = CC.NewInstruction(new_node, Nothing, CC.NoCallInfo(), line, nothing)
     inserter(new_inst)
 end

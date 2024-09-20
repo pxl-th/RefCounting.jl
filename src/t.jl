@@ -23,18 +23,18 @@ end
 
 dtor(_, c) = Core.println("⋅ dtor: $c")
 
-function f1(b, c)
-    x = RefCounted(Ref(1), dtor)
-    x = if b
-        use(x)
-    else
-        if c
-            use3(x)
-        else
-            use2(x)
-        end
-    end
-    use(x)
+function setuse(r, x)
+    setfield!(r, :x, x)
+end
+
+function f1()
+    r = Ref{RefCounted{Int}}()
+    x = RefCounted(1, dtor)
+    setuse(r, x)
+    # setfield!(r, :x, x)
+
+    # y = RefCounted(2, dtor)
+    # setfield!(r, :x, y)
     return
 end
 
@@ -51,7 +51,7 @@ end
 
 function main()
     # RefCounting.execute(f, RefCounted(:x, dtor))
-    RefCounting.execute(f1, false, false)
+    RefCounting.execute(f1)
     # RefCounting.execute(f2, false)
     return
 end

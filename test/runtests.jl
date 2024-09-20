@@ -344,6 +344,9 @@ end
         RefCounting.execute(f2, true, true)
         @test COUNTER[] == 0
         @test obj_val == 3 # 1 + 1 (use) + 1 (use)
-
     end
+
+    # @testset "Arcscan Ref" begin
+    
+    # end
 end

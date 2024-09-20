@@ -7,6 +7,8 @@ Base.iterate(useref::CC.UseRefIterator, state...) = CC.iterate(useref, state...)
 Base.getindex(useref::CC.UseRef) = CC.getindex(useref)
 
 function refcount_pass!(ir::CC.IRCode)
+    Core.println()
+    Core.println()
     Core.println("=== RC ===")
 
     ir = debug!(ir)
@@ -165,7 +167,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                     # else
                     #     x
                     # end
-                    || terminator_inst isa Nothing # TODO document this is a no-op (branch does nothing or identity)
+                    || terminator_inst isa Nothing
                     # terminator stmt is a regular instruction,
                     # which may also be a `def`.
                     || terminator_inst isa Expr # TODO is this safe? does it mean it is a regular inst?
@@ -249,6 +251,18 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         # If `stmt` is not `RefCounted` or not a `CC.PhiNode`,
         # record all `uses` of it.
         else
+            if attach_arcscan
+                holder_obj = stmt.args[2]
+                @show holder_obj
+                @show typeof(holder_obj)
+                if holder_obj isa CC.SSAValue
+                    inst = compact[holder_obj]
+                    @show inst[:stmt]
+                    # TODO if it is an Argument, check its type
+                    @show CC.widenconst(inst[:type]) # TODO check if WeakRef and do not mark as use its userefs
+                end
+            end
+
             # For every argument to `stmt`, record this `stmt` as its `use`
             # if it is a `RefCounted` obj (has entry in `defuses` already).
             for use_ref in CC.userefs(stmt)
@@ -295,14 +309,30 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
             end
         end
 
+        # Insert `finalizer(rc_scan!, obj)` before `setfield!` stmt.
+        # So when the `obj` is dead, its refcount is decreased.
+        # TODO this still relies on GC...
+        #
+        # If in the meantime the obj was assigned again,
+        # we'll double decrease same RefCounted.
+        #
+        # TODO + insert rc_scan_decrease! that decreases previously assigned obj.
+        # TODO - track refcounted holders, find exits for them and decrease counter there?
+        # TODO - handle WeakRef (don't count as use)
         if has_arcuse & attach_arcscan
             obj = stmt.args[2]
             @assert obj ≢ nothing
-            insert_rcscan!(
+            # insert_rcscan!(
+            insert_immediate_rcscan!(
                 CC.InsertBefore(compact, CC.SSAValue(idx)),
                 inst[:line], obj)
 
-            Core.println("Attaching rcscan $obj $(typeof(obj)): $stmt")
+            Core.println("""Attaching rcscan:
+                - obj: $obj $(typeof(obj))
+                - idx: $idx
+                - line: $(inst[:line])
+                - stmt: $stmt
+            """)
         end
 
         if stmt isa CC.UpsilonNode
@@ -316,17 +346,41 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
         if is_rc
             # TODO ???
             # @assert !is_ϕ
-            #
-            # TODO `is_additional_def`
-            @assert !CC.isexpr(stmt, :(=))
-            @assert !CC.is_known_call(stmt, setfield!, compact)
 
-            val = CC.SSAValue(idx)
+            # TODO do we need extra_def? Since `setfield!` returns the same object.
+            extra_def = false
+            if CC.is_known_call(stmt, setfield!, compact)
+                extra_def = true
+                val = stmt.args[4]
+                @assert haskey(defuses, val)
+            elseif CC.isexpr(stmt, :(=))
+                @assert false
+                extra_def = true
+                val = stmt.args[2]
+                @assert haskey(defuses, val)
+            else
+                val = CC.SSAValue(idx)
+            end
+
             defuse = get!(() -> DefUse(val, Int[], Int[]), defuses, val)
-            # @assert idx ∉ defuse.defs "isrc $idx in defs: $(defuse.defs): $stmt, $val"
+            @assert idx ∉ defuse.defs "isrc $idx in defs: $(defuse.defs): $stmt, $val"
             # @assert idx ∉ defuse.uses "isrc $idx in uses: $(defuse.uses): $stmt, $val"
-            push!(defuse.defs, idx)
-            Core.println("New RC def: $val -> $idx")
+            if idx ∉ defuse.uses
+                push!(defuse.defs, idx)
+                Core.println("New RC def: $val -> $idx")
+            end
+
+            # If `stmt` is something like:
+            # r[] = x::RefCounted
+            #
+            # Then set `defs` both for `setfield!` arg and for the current `stmt`.
+            # Ensuring that current stmt does not yet exist in `defuses`.
+            if extra_def
+                val = CC.SSAValue(idx)
+                @assert !haskey(defuses, val)
+                defuses[val] = defuse
+                Core.println("Extra RC def: $val -> $idx")
+            end
 
             if is_new_ref
                 insert_increment!(
@@ -474,15 +528,15 @@ function rc_insertion!(
                     - bb -> other_bb: $bb -> $other_bb
                 """)
             else
-                # insert_conditional_decrement!(
-                #     CC.InsertBefore(ir, CC.SSAValue(terminator)),
-                #     inst[:line], def, cond)
-                # Core.println("""Inserting conditional decrement:
-                #     - stmt: $gotoifnot
-                #     - def: $def
-                #     - cond: $cond
-                #     - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
-                # """)
+                insert_conditional_decrement!(
+                    CC.InsertBefore(ir, CC.SSAValue(terminator)),
+                    inst[:line], def, cond)
+                Core.println("""Inserting conditional decrement:
+                    - stmt: $gotoifnot
+                    - def: $def
+                    - cond: $cond
+                    - bb -> dest: $bb -> $(gotoifnot.dest) (!= $other_bb other_bb)
+                """)
             end
         end
     end
