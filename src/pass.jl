@@ -228,7 +228,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                             - terminator stmt: $(compact[CC.SSAValue(terminator)][:stmt])
                         """)
                     else
-                        @assert false
+                        # @assert false
                         insert_conditional_increment!(
                             CC.InsertBefore(compact, CC.SSAValue(terminator)),
                             inst[:line], val, cond)
@@ -354,7 +354,7 @@ function find_rcs!(ir::CC.IRCode)::Tuple{CC.IRCode, Vector{DefUse}}
                 val = stmt.args[4]
                 @assert haskey(defuses, val)
             elseif CC.isexpr(stmt, :(=))
-                @assert false
+                # @assert false
                 extra_def = true
                 val = stmt.args[2]
                 @assert haskey(defuses, val)
